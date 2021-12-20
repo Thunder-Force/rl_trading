@@ -57,8 +57,8 @@ class rl:
             frame_bound = (5,250), 
             window_size = 5
         )
-        #print(env.signal_features)
-        #print(env.action_space)
+        print(env.signal_features)
+        print(env.action_space)
         state = env.reset()
         while True: 
             action = env.action_space.sample()
@@ -66,7 +66,7 @@ class rl:
             if done: 
                 print("info", info)
                 break
-                
+     
         plt.figure(figsize=(15,6))
         plt.cla()
         env.render_all()
@@ -75,33 +75,49 @@ class rl:
         return env
 
 
-    # ADD SIGNALS
-    #==============================================================================
-    def add_signals(self):
-        env = self.load_env()     
-        start = env.frame_bound[0] - env.window_size
-        end = env.frame_bound[1]
-        prices = env.df.loc[:, 'Low'].to_numpy()[start:end]
-        signal_features = env.df.loc[:, ['Low', 'Volume','SMA', 'RSI', 'OBV']].to_numpy()[start:end]
-        return prices, signal_features
-
-
     # LOAD CUSTOM ENV
     #==============================================================================
     def load_custom_env(self) -> gym:
-        
+        data = self.read_data()
+        env = gym.make(self.environment_name, 
+            df = data, 
+            frame_bound = (5,250), 
+            window_size = 5
+        )
+
+        def add_signals(env):
+            start = env.frame_bound[0] - env.window_size
+            end = env.frame_bound[1]
+            prices = env.df.loc[:, 'Low'].to_numpy()[start:end]
+            signal_features = env.df.loc[:, ['Low', 'Volume','SMA', 'RSI', 'OBV']].to_numpy()[start:end]
+            return prices, signal_features
+
         class custom_env(StocksEnv):       
-            _process_data = self.add_signals()
+            _process_data = add_signals
 
         env2 = custom_env(
-            df = self.read_data(), 
+            df = data, 
             window_size = 12, 
             frame_bound=(12,50)
         )
         print(env2.signal_features)
-        print(self.data.head())
+        print(data.head())
 
+        state = env2.reset()
+        while True: 
+            action = env2.action_space.sample()
+            n_state, reward, done, info = env2.step(action)
+            if done: 
+                print("info", info)
+                break
 
+     
+        plt.figure(figsize=(15,6))
+        plt.cla()
+        env2.render_all()
+        plt.show()
+
+        return env2
 
 
 
