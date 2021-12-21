@@ -1,3 +1,5 @@
+import tensorflow as tf 
+
 import gym
 import gym_anytrading
 from gym_anytrading.envs import StocksEnv
@@ -10,6 +12,7 @@ from stable_baselines import A2C
 
 
 import os
+import datetime as dt
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -27,12 +30,13 @@ class rl:
         self.ppo_model_path = os.path.join(self.root_path, 'models', 'ppo_model')
         self.dqn_model_path = os.path.join(self.root_path, 'models', 'dqn_model')
         self.environment_name = 'stocks-v0'
+        self.stock = 'gme'
 
 
     # READ DATA
     #==============================================================================
     def read_data(self) -> pd.DataFrame:
-        df = pd.read_csv('data/gme.csv')
+        df = pd.read_csv(f'data/{self.stock}.csv')
         
         df['Date'] = pd.to_datetime(df['Date'])
         df.sort_values('Date', ascending=True, inplace=True)
@@ -51,7 +55,7 @@ class rl:
     # LOAD ENV
     #==============================================================================
     def load_env(self) -> gym:
-        print('\n>>> Loading Environment...')
+        print(f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Loading {self.stock} Default Environment...\n")
         env = gym.make(self.environment_name, 
             df = self.read_data(), 
             frame_bound = (5,250), 
@@ -71,7 +75,8 @@ class rl:
         plt.cla()
         env.render_all()
         plt.show()
-        
+
+        print(f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Environment Loaded.")
         return env
 
 
@@ -121,3 +126,54 @@ class rl:
 
 
 
+    # TRAIN MODEL
+    #==============================================================================
+    def train_model(self) -> A2C:     
+        dt_start = dt.datetime.now()
+        env = self.load_custom_env()
+        env_maker = lambda: env
+        env = DummyVecEnv([env_maker])
+        model = A2C('MlpLstmPolicy', env, verbose=1) 
+        print(model.learn(total_timesteps=1000000))
+        dt_end = dt.datetime.now()
+        print(f"[{dt_start.strftime('%H:%M:%S')}]: Training {self.stock} Model...")
+        print(f"[{dt_end.strftime('%H:%M:%S')}]: {self.stock} Model Trained.")
+        print(f'{dt_start - dt_end}')
+        return model
+
+
+    # EVAL MODEL
+    #==============================================================================
+    def evaluate_model(self) -> A2C:
+        dt_start = dt.datetime.now()
+        model = self.train_model()
+        dt_end = dt.datetime.now()
+        print(f"[{dt_start.strftime('%H:%M:%S')}]: Training {self.stock} Model...")
+        print(f"[{dt_end.strftime('%H:%M:%S')}]: {self.stock} Model Trained.")
+        print(f'[Time Taken]:{ dt_start - dt_end}')
+
+        dt_start = f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Loading Custom Environment..."
+        env = self.load_custom_env()
+        dt_end = f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Environment Loaded."
+        print(f'{dt_start}\n{dt_end}')
+
+        dt_start = f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Evaluating {self.stock} Model..."
+        obs = env.reset()
+        while True: 
+            obs = obs[np.newaxis, ...]
+            action, _states = model.predict(obs)
+            obs, rewards, done, info = env.step(action)
+            if done:
+                print("info", info)
+                break
+        
+        print(f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Training {self.stock} Model...\n")
+
+
+
+
+        def check_gpu(self):
+            if tf.test.gpu_device_name(): 
+                print(f'Default GPU Device:{tf.test.gpu_device_name()}')
+            else:
+                print("Please install GPU version of TF")
