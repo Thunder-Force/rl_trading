@@ -1,0 +1,11 @@
+-- Downloads
+-----------------------------------------------------
+Microsoft Visual C++ Redistributable.
+NVIDIA CUDA
+NVIDIA GPU Computing Toolkit
+
+download missing dlls
+
+https://stackoverflow.com/questions/38303974/tensorflow-running-error-with-cublas
+
+

@@ -1,15 +1,10 @@
-import tensorflow as tf 
 
 import gym
-import gym_anytrading
 from gym_anytrading.envs import StocksEnv
 from finta import TA
 
-
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines import A2C
-
-
 
 import os
 import datetime as dt
@@ -17,7 +12,15 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
+
+
+# Enable GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+
+# Disables CPU AVX/FMA Warning when using GPU
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 #==============================================================================
 # CLASS: rl
@@ -71,10 +74,10 @@ class rl:
                 print("info", info)
                 break
      
-        plt.figure(figsize=(15,6))
-        plt.cla()
+        #plt.figure(figsize=(15,6))
+        #plt.cla()
         env.render_all()
-        plt.show()
+        #plt.show()
 
         print(f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Environment Loaded.")
         return env
@@ -117,10 +120,10 @@ class rl:
                 break
 
      
-        plt.figure(figsize=(15,6))
-        plt.cla()
+        #plt.figure(figsize=(15,6))
+        #plt.cla()
         env2.render_all()
-        plt.show()
+        #plt.show()
 
         return env2
 
@@ -130,14 +133,15 @@ class rl:
     #==============================================================================
     def train_model(self) -> A2C:     
         dt_start = dt.datetime.now()
+        print(dt_start)
         env = self.load_custom_env()
         env_maker = lambda: env
         env = DummyVecEnv([env_maker])
         model = A2C('MlpLstmPolicy', env, verbose=1) 
-        print(model.learn(total_timesteps=1000000))
+        print(model.learn(total_timesteps=100000))
         dt_end = dt.datetime.now()
-        print(f"[{dt_start.strftime('%H:%M:%S')}]: Training {self.stock} Model...")
-        print(f"[{dt_end.strftime('%H:%M:%S')}]: {self.stock} Model Trained.")
+        print(f"[{dt_start.strftime('%H:%M:%S')}]: Training {self.stock.capitalize()} Model...")
+        print(f"[{dt_end.strftime('%H:%M:%S')}]: {self.stock.capitalize()} Model Trained.")
         print(f'{dt_start - dt_end}')
         return model
 
@@ -150,7 +154,7 @@ class rl:
         dt_end = dt.datetime.now()
         print(f"[{dt_start.strftime('%H:%M:%S')}]: Training {self.stock} Model...")
         print(f"[{dt_end.strftime('%H:%M:%S')}]: {self.stock} Model Trained.")
-        print(f'[Time Taken]:{ dt_start - dt_end}')
+        print(f'[Time Taken]: ' + '{ dt_end - dt_start}'.strftime('%H:%M:%S'))
 
         dt_start = f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Loading Custom Environment..."
         env = self.load_custom_env()
@@ -170,10 +174,10 @@ class rl:
         print(f"[{dt.datetime.now().strftime('%H:%M:%S')}]: Training {self.stock} Model...\n")
 
 
-
-
-        def check_gpu(self):
-            if tf.test.gpu_device_name(): 
-                print(f'Default GPU Device:{tf.test.gpu_device_name()}')
-            else:
-                print("Please install GPU version of TF")
+    # CHECK GPU
+    #==============================================================================
+    def check_gpu(self):
+        if tf.test.gpu_device_name(): 
+            print(f'Default GPU:\n{tf.test.gpu_device_name()}')
+        else:
+            print("Please install GPU version of TF")

@@ -7,7 +7,9 @@ from rl import rl
 #============================================================================================
 
 agent = rl()
+#agent.check_gpu()
 #agent.load_env()
 #agent.load_custom_env()
-#agent.train_model()
-agent.evaluate_model()
+agent.train_model()
+
+#agent.evaluate_model()
